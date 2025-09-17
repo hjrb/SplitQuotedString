@@ -13,7 +13,7 @@ namespace SplitQuotedString.Benchmarks
         [Benchmark]
         public List<string> GetTokens_Default()
         {
-            return new StringSplit().GetTokens(testString).ToList();
+            return new QuotedStringSplitter().Split(testString).ToList();
         }
     }
 }
