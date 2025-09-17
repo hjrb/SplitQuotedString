@@ -2,6 +2,13 @@
 
 namespace HunnyR.Tools;
 
+public static class QuotedStringSplitterExtensions
+{
+	public static IEnumerable<string> SplitQuoted(
+		this string source, HashSet<char> delimiters, HashSet<char>? quoters = null, bool treatConsequticveDelimitersAsOne = false, bool treatTwoQuotesAsLiteral = false
+	) => QuotedStringSplitter.Split(source, delimiters, quoters, treatConsequticveDelimitersAsOne, treatTwoQuotesAsLiteral);
+}
+
 /// <summary>
 /// split strings with support for quoted substrings and multiple delimiters
 /// </summary>
@@ -34,9 +41,21 @@ public class QuotedStringSplitter
 	/// </summary>
 	public HashSet<char> Delimiters { get; set;} = [' ', '\t'];
 
-	public readonly static QuotedStringSplitter Default = new();
 	public static readonly HashSet<char> CsvDelimiters = [',',';','\t'];
-	public readonly static QuotedStringSplitter Csv = new() { Delimiters=CsvDelimiters };
+
+	public static IEnumerable<string> Split(
+		string source, HashSet<char> delimiters, HashSet<char>? quoters = null, bool treatConsequticveDelimitersAsOne = false, bool treatTwoQuotesAsLiteral = false
+	)
+	{
+		var x = new QuotedStringSplitter()
+		{
+			TreatConsequticveDelimitersAsOne = treatConsequticveDelimitersAsOne,
+			TreatTwoQuotesAsLiteral = treatTwoQuotesAsLiteral,
+			Delimiters=delimiters,
+		};
+		if (quoters != null) x.Quoters = quoters;
+		return x.Split(source);
+	}
 
 
 	public IEnumerable<string> Split(
