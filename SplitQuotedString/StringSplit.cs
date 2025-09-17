@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
-namespace hr.Tools;
+namespace HunnyR.Tools;
 
 /// <summary>
 /// yet another string splitter
@@ -11,86 +9,100 @@ public static class StringSplit
 {
 	public static readonly char[] DefaultQuoteChars = ['"', '\''];
 	public static readonly char[] DefaultDelimiters = [' ', '\t'];
-	/// <summary>
-	/// splits a string into tokens, honoring quoted substrings
-	/// </summary>
-	/// <param name="source">the string to split</param>
-	/// <param name="includeEmpty"></param>
-	/// <param name="quotechars">a set of quote characters, if null the default set is single quote (') and double quote (")</param>
-	/// <param name="delimiters">a set of delimiter (separator) characters</param>. if null the default is space ( ) and tabulator (\t)
-	/// <returns></returns>
+	/// <inheritdoc cref="GetTokens(System.ReadOnlySpan{char}, bool, System.ReadOnlySpan{char}, System.ReadOnlySpan{char})" />
 	public static IEnumerable<string> GetTokens(
-			string source,
-			bool includeEmpty = false,
-			char[]? quotechars = null,
-			char[]? delimiters = null)
-	{
-		quotechars ??= DefaultQuoteChars;
-		delimiters ??= DefaultDelimiters;
+		string source,
+		bool treatConsequticveDelimitersAsOne = false,
+		char[]? quoters = null,
+		char[]? delimiters = null
+	) =>
+		GetTokens(source: source, treatConsequticveDelimitersAsOne: treatConsequticveDelimitersAsOne, quoters: (quoters ?? DefaultQuoteChars).AsSpan(), delimiters: (delimiters ?? DefaultDelimiters).AsSpan());
 
+	/// <inheritdoc cref="GetTokens(System.ReadOnlySpan{char}, bool, System.ReadOnlySpan{char}, System.ReadOnlySpan{char})" />
+	public static IEnumerable<string> GetTokens(
+		ReadOnlySpan<char> source,
+		bool treatConsequticveDelimitersAsOne = false
+	) => GetTokens(source, treatConsequticveDelimitersAsOne, DefaultQuoteChars.AsSpan(), DefaultDelimiters.AsSpan());
+
+
+	/// <summary>
+	/// Splits a character span into tokens, honoring quoted substrings. Delimiters that occur inside a matching quote pair
+	/// are treated as literal characters and not as token separators. Quote characters are not included in the returned tokens.
+	/// </summary>
+	/// <param name="source">The source span to parse.</param>
+	/// <param name="treatConsequticveDelimitersAsOne">If true, empty tokens (adjacent delimiters or leading/trailing delimiters) are included; otherwise they are skipped.</param>
+	/// <param name="quoters">Set of quote characters. When null, defaults to single quote (') and double quote (").</param>
+	/// <param name="delimiters">Set of delimiter (separator) characters. When null, defaults to space and tab.</param>
+	/// <returns>An enumerable of parsed tokens in order of appearance.</returns>
+	public static IEnumerable<string> GetTokens(
+		ReadOnlySpan<char> source,
+		bool treatConsequticveDelimitersAsOne,
+		ReadOnlySpan<char> quoters,
+		ReadOnlySpan<char> delimiters
+	 )
+	 {
+		if (source.Length == 0)
+		{
+			return [];
+		}
+		var tokens = new List<string>(source.Length / 2); // rough estimate
 		var currentToken = new StringBuilder();
 		var inQuote = false;
 		var currentQuote = (char)0;
-		bool shouldReturn() => includeEmpty || currentToken.Length > 0;
-		
-		foreach (var c in source)
+		var i = 0;
+		for (; i < source.Length; i++)
 		{
-			// did we find a quote
-			if (quotechars.Contains(c))
+			var c = source[i];
+			//  quote character ?
+			if (quoters.Contains(c))
 			{
-				if (inQuote)
-				{
-					if (currentQuote == c)
-					{
-						// close quote by returning token after empty check
-						if (shouldReturn())
-						{
-							yield return currentToken.ToString(); // scannedTokens.Add(currentToken.ToString());
-						}
-						currentToken.Clear();
-						// toggle inquote
-						inQuote = !inQuote;
-					}
-					else
-					{
-						currentToken.Append(c);
-					}
-				}
-				else
+			// if we are not in quote set quote to true and remember quote character
+				if (!inQuote)
 				{
 					currentQuote = c;
 					inQuote = true;
 				}
+				else
+				{
+					// if the same quote end of quote reached
+					if (currentQuote == c)
+					{
+						inQuote = !inQuote;
+					}
+					else
+					{
+						// apppend to current token
+						currentToken.Append(c);
+					}
+				}
+				continue;
 			}
 
-			// did we find a delimiter
-			else if (delimiters.Contains(c))
+			// delimiter?
+			if (delimiters.Contains(c))
 			{
-				// are we NOT inside a quote
-				if (!inQuote)
+				if (inQuote)
 				{
-					// return token after empty check
-					if (shouldReturn())
-					{
-						yield return currentToken.ToString();
-					}
-					currentToken.Clear();
+					// treat delimiter as normal character if in quote
+					currentToken.Append(c);
 				}
 				else
 				{
-					// add to current token
-					currentToken.Append(c);
+					tokens.Add(currentToken.ToString());
+					currentToken.Clear();
+					if (treatConsequticveDelimitersAsOne)
+					{
+						var k = i + 1;
+						while (k < source.Length && delimiters.Contains(source[k])) ++k;
+						i = k - 1;
+					}
 				}
+				continue;
 			}
-			else
-			{
-				currentToken.Append(c);
-			}
+			// regular character: add to current token
+			currentToken.Append(c);
 		}
-		// handle end of loop
-		if (shouldReturn())
-		{
-			yield return currentToken.ToString();
-		}
-	}
+		tokens.Add(currentToken.ToString());
+		return tokens;
+	 }
 }
