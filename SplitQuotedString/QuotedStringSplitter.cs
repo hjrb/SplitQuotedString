@@ -95,12 +95,15 @@ public class QuotedStringSplitter
 					{
 						if (currentQuote == currentChar)
 						{
-								if (this.TreatTwoQuotesAsLiteral && previousChar == currentChar) _ = currentToken.Append(currentChar);
-								inQuote = false;
+							inQuote = false;
+							if (this.TreatTwoQuotesAsLiteral && previousChar == currentChar)
+							{
+								_ = currentToken.Append(currentChar);
+							}
 						}
 						else
 						{
-						_ = currentToken.Append(currentChar);
+							_ = currentToken.Append(currentChar);
 						}
 					}
 					continue;
@@ -120,8 +123,12 @@ public class QuotedStringSplitter
 						if (this.TreatConsecutiveDelimitersAsOne)
 						{
 								var k = i + 1;
-								while (k < source.Length && this.Delimiters.Contains(source[k])) ++k;
-								i = k - 1;
+								while (k < source.Length && this.Delimiters.Contains(source[k]))
+						{
+							++k;
+						}
+
+						i = k - 1;
 						}
 					}
 					continue;
