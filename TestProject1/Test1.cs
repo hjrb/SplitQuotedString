@@ -1,6 +1,6 @@
 ﻿using HunnyR.Tools;
 
-using nietras.SeparatedValues;
+
 
 namespace TestProject1;
 
@@ -21,21 +21,7 @@ public sealed class Test1
 		  Assert.IsTrue(result[0].Length == 0);
 		  Assert.IsTrue(result[1].Length == 0);
 	}
-	[TestMethod]
-	public void TestMethodUseSep()
-	{
-	  foreach (var row in Sep.New(';').Reader(o=>o with {HasHeader=false}).FromText(";")) { 
-			Assert.IsTrue(row.ColCount == 2);
-		Assert.AreEqual(0, row[0].Span.Length);
-		Assert.AreEqual(0, row[1].Span.Length);
-		}
-	  foreach (var row in Sep.New(';').Reader(o=>o with {HasHeader=false, Unescape=true }).FromText("\";\"")) { 
-			Assert.IsTrue(row.ColCount == 1);
-			var s=row[0].ToString();
-			Assert.AreEqual(";", s);
-		}
 
-	}
 
 
 	 [TestMethod]
