@@ -20,6 +20,7 @@
 	  <IncludeSymbols>true</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	  <PackageReleaseNotes>Initial release: core splitting utility supporting multiple separators, multiple quote chars, doubled quote escaping, and collapsing repeated separators.</PackageReleaseNotes>
   </PropertyGroup>
 	<ItemGroup>
 		<!-- Ensure README and License are packed -->
