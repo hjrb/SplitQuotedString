@@ -27,7 +27,11 @@ public class Benchmarks
 				list.Add(row[i].ToString());
 			}
 		}
-
+	 // foreach (var row in Sep.New(';').Reader(o=>o with {HasHeader=false, Unescape=true }).FromText("\";\"")) { 
+		//	Assert.IsTrue(row.ColCount == 1);
+		//	var s=row[0].ToString();
+		//	Assert.AreEqual(";", s);
+		//}
 
 	}
 }
