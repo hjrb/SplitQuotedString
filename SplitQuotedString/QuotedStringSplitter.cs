@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Immutable;
+using System.Text;
 
 namespace HunnyR.Tools;
 
@@ -25,6 +26,8 @@ public class QuotedStringSplitter
 	/// </summary>
 	public bool TreatTwoQuotesAsLiteral { get; set; } = false;
 
+	private const string CommonCharactersErrorMessage = "The delimiters and quoters have common characters. This might lead to undesired result. Quoters will always be evaluated first!";
+
 	/// <summary>
 	/// quote characters
 	/// default are double quote(") and single quote (')
@@ -33,16 +36,42 @@ public class QuotedStringSplitter
 	/// '"a.b"' will return ["a.b"] not matter what delimiters
 	/// ''a.b'' will return ["a","b"] if . is the delimiter and TreatTwoQuotesAsLiteral as literal is false else it will return ["'a.b'"]
 	/// </summary>
-	public HashSet<char> Quoters { get; set; } = ['"', '\''];
+	private HashSet<char> _quoters= ['"', '\''];
+	public HashSet<char> Quoters { 
+		get {return this._quoters; } 
+		set { 
+			if (value.Intersect(this.Delimiters).Any())
+			{
+				throw new ArgumentException(CommonCharactersErrorMessage, nameof(this.Quoters));
+			}
+
+			this._quoters = [..value]; // create a copy!
+		} 
+	} 
 
 	/// <summary>
 	/// delimiters
 	/// default is space and tab
 	/// should contain at least one character. if empty will return the full string as single token
 	/// </summary>
-	public HashSet<char> Delimiters { get; set; } = [' ', '\t'];
+	private HashSet<char> _delimters= [' ', '\t'];
+	public HashSet<char> Delimiters { get { return this._delimters; } 
+		set { 
+				if (value.Intersect(this.Quoters).Any())
+			{
+				throw new ArgumentException(CommonCharactersErrorMessage, nameof(this.Delimiters));
+			}
 
-	public static readonly HashSet<char> CsvDelimiters = [',', ';', '\t'];
+			this._delimters = [.. value]; // create a copy!
+				
+		} 
+	}
+
+
+	/// <summary>
+	/// the delimiters typically used for CSV files
+	/// </summary>
+	public static readonly ImmutableHashSet<char> CsvDelimiters = [',', ';', '\t'];
 
 	public static IEnumerable<string> Split(
 		string source, HashSet<char> delimiters, HashSet<char>? quoters = null, bool treatConsecutiveDelimitersAsOne = false, bool treatTwoQuotesAsLiteral = false

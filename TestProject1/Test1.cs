@@ -22,6 +22,11 @@ public sealed class Test1
 		  Assert.IsTrue(result[1].Length == 0);
 	}
 
+	 [TestMethod]
+	 public void TestMethodSingleCommon()
+	 {
+		Assert.Throws<ArgumentException>(()=>new QuotedStringSplitter() { Delimiters = ['A','B'], Quoters=['A'] });
+	}
 
 
 	 [TestMethod]
